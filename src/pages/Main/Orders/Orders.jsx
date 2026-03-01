@@ -7,6 +7,7 @@ import {
   useOrderDetailsQuery,
   useSendReceipt0Mutation,
   useShipOrderMutation,
+  useSyncOrderPaymentMutation,
 } from "../../../redux/features/manageOrderSlice";
 import toast from "react-hot-toast";
 
@@ -25,6 +26,7 @@ const Orders = () => {
   const [receiptNumber, setReceiptNumber] = useState("");
   const [shipOrder] = useShipOrderMutation();
   const [sendReceipt] = useSendReceipt0Mutation();
+  const [syncOrderPayment] = useSyncOrderPaymentMutation();
 
   const { data: orderDetails, isFetching } = useOrderDetailsQuery(
     selectedOrder,
@@ -68,6 +70,16 @@ const Orders = () => {
       toast.success("Order receipt sent successfully", { id: toastId });
     } catch (err) {
       toast.error("Failed to send order receipt.", { id: toastId });
+    }
+  };
+
+  const handleSyncPayment = async (orderId) => {
+    const toastId = toast.loading("Syncing payment status...");
+    try {
+      await syncOrderPayment(orderId).unwrap();
+      toast.success("Order status synced successfully", { id: toastId });
+    } catch (err) {
+      toast.error("Failed to sync status. Order might not have a transaction yet.", { id: toastId });
     }
   };
 
@@ -160,12 +172,12 @@ const Orders = () => {
       render: (state) => (
         <span
           className={`px-3 py-1 rounded-full text-sm ${state === "success"
-              ? "bg-green-100 text-green-600"
-              : state === "pending"
-                ? "bg-blue-100 text-blue-600"
-                : state === "cancel"
-                  ? "bg-pink-100 text-pink-600"
-                  : "bg-yellow-100 text-yellow-600"
+            ? "bg-green-100 text-green-600"
+            : state === "pending"
+              ? "bg-blue-100 text-blue-600"
+              : state === "cancel"
+                ? "bg-pink-100 text-pink-600"
+                : "bg-yellow-100 text-yellow-600"
             }`}>
           {state}
         </span>
@@ -215,8 +227,8 @@ const Orders = () => {
             key={status}
             onClick={() => handleFilter(status)}
             className={`px-4 py-1 rounded-full ${statusFilter === status
-                ? "bg-black text-white"
-                : "bg-gray-100 text-black"
+              ? "bg-black text-white"
+              : "bg-gray-100 text-black"
               }`}>
             {status}
           </Button>
@@ -275,6 +287,14 @@ const Orders = () => {
             disabled={orderDetails?.data?.state === "shipped"}>
             {orderDetails?.data?.state}
           </Button>,
+          orderDetails?.data?.state === "pending" && (
+            <Button
+              key="sync"
+              onClick={() => handleSyncPayment(selectedOrder)}
+              style={{ backgroundColor: "#1890ff", color: "white" }}>
+              Sync Status
+            </Button>
+          ),
         ]}>
         {orderDetails?.data ? (
           <div className="grid grid-cols-1 gap-2">

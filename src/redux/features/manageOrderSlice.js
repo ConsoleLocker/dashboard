@@ -44,6 +44,13 @@ export const manageOrderApi = baseApi.injectEndpoints({
 			}),
 			invalidatesTags: ["Orders"],
 		}),
+		syncOrderPayment: builder.mutation({
+			query: (orderId) => ({
+				url: `/admin/order/${orderId}/sync-payment`,
+				method: "POST",
+			}),
+			invalidatesTags: ["Orders"],
+		}),
 	}),
 });
 
@@ -52,4 +59,5 @@ export const {
 	useShipOrderMutation,
 	useSendReceipt0Mutation,
 	useOrderDetailsQuery,
+	useSyncOrderPaymentMutation,
 } = manageOrderApi;
